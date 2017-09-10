@@ -1,0 +1,39 @@
+{
+  "name": "redux-composite-demo",
+  "version": "0.0.1",
+  "description": "Demo for 'redux-composite' package",
+  "jsnext:main": "src/index.js",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "webpack -d"
+  },
+  "author": {
+    "name": "Serhii Kyrychenko"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blackakula/redux-composite-demo.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.10.4",
+    "babel-loader": "^6.2.4",
+    "babel-plugin-transform-object-rest-spread": "^6.20.2",
+    "babel-preset-es2015": "^6.18.0",
+    "redux": "^3.6.0",
+    "babel-preset-react": "^6.11.1",
+    "react": "^15.2.1",
+    "react-dom": "^15.2.1",
+    "webpack": "^1.13.1",
+    "redux-composite": "^0.0.11"
+  },
+  "babel": {
+    "presets": [
+      "react",
+      "es2015"
+    ],
+    "plugins": [
+      "transform-object-rest-spread"
+    ]
+  }
+}
