@@ -85,7 +85,9 @@
 	    var store = (0, _redux.createStore)(builder.composite.reducer, {
 	        textarea: (0, _index2.Reducer)(),
 	        buttons: [(0, _index3.Reducer)(), (0, _index3.Reducer)(), (0, _index3.Reducer)()]
-	    }, (0, _redux.applyMiddleware)(builder.composite.middleware));
+	    }, (0, _redux.compose)((0, _redux.applyMiddleware)(builder.composite.middleware), window.devToolsExtension ? window.devToolsExtension() : function (f) {
+	        return f;
+	    }));
 	    var CompositeComponent = builder.component(store);
 	
 	    var compositeRender = function compositeRender() {
