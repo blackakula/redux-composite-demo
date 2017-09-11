@@ -1,4 +1,4 @@
-import {createStore, applyMiddleware} from 'redux';
+import {createStore, applyMiddleware,compose} from 'redux';
 import {Builder} from './Composite/index';
 import {Reducer as TextareaReducer} from './Textarea/index';
 import {Reducer as ButtonReducer} from './Button/index';
@@ -17,7 +17,10 @@ export const application = () => {
                 ButtonReducer()
             ]
         },
-        applyMiddleware(builder.composite.middleware)
+        compose(
+          applyMiddleware(builder.composite.middleware),
+          window.devToolsExtension ? window.devToolsExtension() : f => f
+        )
     );
     const CompositeComponent = builder.component(store);
 
