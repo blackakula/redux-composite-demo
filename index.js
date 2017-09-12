@@ -7300,7 +7300,7 @@
 		            })(compositeStructure, (0, _ReduxAction.InitAction)(next), initMiddleware);
 		            return function (action) {
 		                return (0, _WalkComposite2.default)()(function (composite, next, action) {
-		                    return next(action);
+		                    return action === undefined ? undefined : next(action);
 		                })(compositeStructure, initNextMiddleware, (0, _ReduxAction.ReduxAction)(action));
 		            };
 		        };
