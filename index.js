@@ -1422,16 +1422,12 @@
 	                getState = _ref.getState,
 	                subscribe = _ref.subscribe;
 	
-	            var addedTodo = [false, false, false];
 	            var redux = (0, _reduxComposite.Redux)(composite)({ dispatch: dispatch, getState: getState, subscribe: subscribe });
 	            var listener = function listener(i, _ref2) {
 	                var reduxObject = _ref2.redux;
 	
-	                if (reduxObject.getState().clicked && !addedTodo[i]) {
-	                    addedTodo[i] = true;
+	                if (reduxObject.getState().clicked) {
 	                    redux.textarea.redux.dispatch({ type: 'ADD', todo: 'Button ' + i });
-	                } else if (!reduxObject.getState().clicked) {
-	                    addedTodo[i] = false;
 	                }
 	            };
 	            composite.subscribe(dispatch, getState, subscribe)({
@@ -1443,7 +1439,7 @@
 	                    return listener(2, redux.buttons[2]);
 	                }]
 	            });
-	            return (0, _Component2.default)(redux);
+	            return (0, _Component2.default)(redux, composite.memoize(getState));
 	        }
 	    };
 	};
@@ -1474,21 +1470,26 @@
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
-	var Component = exports.Component = function Component(redux) {
+	var Component = exports.Component = function Component(redux, memoize) {
 	    var buttonCss = {
 	        display: 'block',
 	        marginTop: '3px'
 	    };
-	    var Button0 = (0, _index2.Component)('Button (0 sec)', buttonCss)(redux.buttons[0].redux);
-	    var Button1 = (0, _index2.Component)('Button (1 sec)', buttonCss)(redux.buttons[1].redux);
-	    var Button2 = (0, _index2.Component)('Button (2 sec)', buttonCss)(redux.buttons[2].redux);
-	    return function (_ref) {
+	    var buttonsComponents = [0, 1, 2].map(function (index) {
+	        return (0, _index2.Component)('Button (' + index + ' sec)', buttonCss)(redux.buttons[index].redux);
+	    });
+	    var Button0 = memoize.structure.buttons[0].memoize(buttonsComponents[0]);
+	    var Button1 = memoize.structure.buttons[1].memoize(buttonsComponents[1]);
+	    var Button2 = memoize.structure.buttons[2].memoize(buttonsComponents[2]);
+	    return memoize.memoize(function (_ref) {
 	        var textarea = _ref.textarea,
 	            buttons = _ref.buttons;
+	
+	        var Textarea = memoize.structure.textarea.memoize(_index.Component);
 	        return React.createElement(
 	            'div',
 	            null,
-	            React.createElement(_index.Component, textarea),
+	            React.createElement(Textarea, textarea),
 	            React.createElement(
 	                'div',
 	                null,
@@ -1497,7 +1498,7 @@
 	                React.createElement(Button2, buttons[2])
 	            )
 	        );
-	    };
+	    });
 	};
 	
 	exports.default = Component;
@@ -6517,7 +6518,7 @@
 		  });
 		});
 		
-		var _Redux = __webpack_require__(/*! ./Redux */ 14);
+		var _Redux = __webpack_require__(/*! ./Redux */ 15);
 		
 		Object.keys(_Redux).forEach(function (key) {
 		  if (key === "default" || key === "__esModule") return;
@@ -6599,6 +6600,8 @@
 		    value: true
 		});
 		
+		var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+		
 		var _WalkComposite = __webpack_require__(/*! ./Helper/WalkComposite */ 4);
 		
 		var _WalkComposite2 = _interopRequireDefault(_WalkComposite);
@@ -6623,6 +6626,10 @@
 		
 		var _Redux2 = _interopRequireDefault(_Redux);
 		
+		var _Memoize = __webpack_require__(/*! ./Composite/Memoize */ 14);
+		
+		var _Memoize2 = _interopRequireDefault(_Memoize);
+		
 		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 		
 		function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -6636,10 +6643,12 @@
 		        equality = data.equality,
 		        subscribe = data.subscribe,
 		        redux = data.redux,
+		        memoize = data.memoize,
 		        custom = data.custom;
 		
 		    var thisMiddleware = undefined,
-		        thisSubscribe = undefined;
+		        thisSubscribe = undefined,
+		        thisMemoize = undefined;
 		    if (structure === undefined) {
 		        if (typeof reducer !== 'function') {
 		            throw {
@@ -6669,6 +6678,11 @@
 		                redux: { dispatch: dispatch, getState: getState, subscribe: subscribe }
 		            };
 		        };
+		        thisMemoize = typeof memoize === 'function' ? memoize : function (getState) {
+		            return { memoize: function memoize(callback) {
+		                    return callback;
+		                } };
+		        };
 		    } else {
 		        var compositeStructure = (0, _WalkComposite2.default)({}, true)(function (leaf) {
 		            return typeof leaf === 'function' ? new Composite({ reducer: leaf }) : leaf;
@@ -6678,6 +6692,7 @@
 		        this.equality = custom === undefined || typeof custom.equality !== 'function' ? (0, _Equality2.default)(compositeStructure) : custom.equality(compositeStructure);
 		        thisSubscribe = custom === undefined || typeof custom.subscribe !== 'function' ? (0, _Subscribe2.default)(compositeStructure) : custom.subscribe(compositeStructure);
 		        this.redux = custom === undefined || typeof custom.redux !== 'function' ? (0, _Redux2.default)(compositeStructure) : custom.redux(compositeStructure);
+		        thisMemoize = custom === undefined || typeof custom.memoize !== 'function' ? (0, _Memoize2.default)(compositeStructure) : custom.memoize(compositeStructure);
 		    }
 		
 		    // Middleware wrapper
@@ -6691,8 +6706,30 @@
 		        };
 		    };
 		
-		    // Subscribe wrapper
 		    var thisEquality = this.equality;
+		    // Memoize wrapper
+		    this.memoize = function (getState) {
+		        var resolvedMemoize = thisMemoize(getState);
+		        return _extends({}, resolvedMemoize, {
+		            memoize: function memoize(callback) {
+		                if (callback === undefined) {
+		                    return function () {};
+		                }
+		                var state = getState(),
+		                    result = undefined;
+		                return function () {
+		                    var next = getState();
+		                    if (result === undefined || !thisEquality(state, next)) {
+		                        state = next;
+		                        result = resolvedMemoize.memoize(callback).apply(undefined, arguments);
+		                    }
+		                    return result;
+		                };
+		            }
+		        });
+		    };
+		
+		    // Subscribe wrapper
 		    this.subscribe = function (dispatch, getState) {
 		        var subscribe = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
 		        return function (listeners) {
@@ -6704,9 +6741,9 @@
 		            var listener = function listener() {
 		                var next = getState();
 		                if (!thisEquality(state, next)) {
+		                    state = next;
 		                    initializedSubscribe();
 		                }
-		                state = next;
 		            };
 		            return typeof subscribe === 'function' ? subscribe(listener) : listener;
 		        };
@@ -7511,6 +7548,54 @@
 	
 	/***/ }),
 	/* 14 */
+	/*!**********************************!*\
+	  !*** ./src/Composite/Memoize.js ***!
+	  \**********************************/
+	/***/ (function(module, exports, __webpack_require__) {
+	
+		'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		    value: true
+		});
+		
+		var _WalkComposite = __webpack_require__(/*! ../Helper/WalkComposite */ 4);
+		
+		var _WalkComposite2 = _interopRequireDefault(_WalkComposite);
+		
+		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 9);
+		
+		var _DefaultMutationMethod2 = _interopRequireDefault(_DefaultMutationMethod);
+		
+		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+		
+		var Memoize = function Memoize(compositeStructure) {
+		    return function (getState) {
+		        var memoize = function memoize(callback) {
+		            return callback;
+		        };
+		        var structure = (0, _WalkComposite2.default)({
+		            mutationMethod: function mutationMethod(key) {
+		                return function (composite, getState) {
+		                    return [(0, _DefaultMutationMethod2.default)(key)(composite), function () {
+		                        return getState()[key];
+		                    }];
+		                };
+		            }
+		        })(function (composite, getState) {
+		            return composite.memoize(getState);
+		        })(compositeStructure, getState);
+		        return {
+		            memoize: memoize,
+		            structure: structure
+		        };
+		    };
+		};
+		
+		exports.default = Memoize;
+	
+	/***/ }),
+	/* 15 */
 	/*!**********************!*\
 	  !*** ./src/Redux.js ***!
 	  \**********************/
