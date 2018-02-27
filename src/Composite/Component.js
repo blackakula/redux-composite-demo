@@ -11,8 +11,8 @@ export const Component = (redux, memoize) => {
     const Button0 = memoize.structure.buttons[0].memoize(buttonsComponents[0]);
     const Button1 = memoize.structure.buttons[1].memoize(buttonsComponents[1]);
     const Button2 = memoize.structure.buttons[2].memoize(buttonsComponents[2]);
+    const Textarea = memoize.structure.textarea.memoize(TextareaComponent);
     return memoize.memoize(({textarea, buttons}) => {
-        const Textarea = memoize.structure.textarea.memoize(TextareaComponent);
         return (<div>
             <Textarea {...textarea}/>
             <div>
