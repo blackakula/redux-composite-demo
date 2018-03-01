@@ -6563,7 +6563,7 @@
 		var Composite = exports.Composite = function Composite(parameters) {
 		  return new _Composite2.default(parameters);
 		};
-		exports.default = { Composite: Composite, Structure: _Structure2.default, Redux: _Redux2.default, Defaults: Defaults };
+		exports.default = { Composite: Composite, Structure: _Structure2.default, Redux: _Redux2.default, Defaults: Defaults, Wrappers: _Composite.Wrappers };
 	
 	/***/ }),
 	/* 2 */
@@ -6602,6 +6602,7 @@
 		Object.defineProperty(exports, "__esModule", {
 		    value: true
 		});
+		exports.Wrappers = undefined;
 		
 		var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 		
@@ -6637,9 +6638,53 @@
 		
 		function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 		
-		var Composite = function Composite(data) {
-		    var _this = this;
+		var defaultEquality = function defaultEquality(prev, next) {
+		    return prev === next;
+		};
 		
+		var Wrappers = exports.Wrappers = {
+		    Subscribe: function Subscribe(originalSubscribe, equality) {
+		        return function (dispatch, getState) {
+		            var subscribe = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+		            return function (listeners) {
+		                if (listeners === undefined) {
+		                    return function () {};
+		                }
+		                var initializedSubscribe = originalSubscribe(dispatch, getState)(listeners);
+		                var state = getState();
+		                var listener = function listener() {
+		                    var next = getState();
+		                    if (!(equality === undefined ? defaultEquality : equality)(state, next)) {
+		                        state = next;
+		                        initializedSubscribe();
+		                    }
+		                };
+		                return typeof subscribe === 'function' ? subscribe(listener) : listener;
+		            };
+		        };
+		    },
+		    Memoize: function Memoize(originalMemoize, equality) {
+		        return function (getState) {
+		            var resolvedMemoize = originalMemoize(getState);
+		            return _extends({}, resolvedMemoize, {
+		                memoize: function memoize(callback) {
+		                    var state = undefined,
+		                        result = undefined;
+		                    return function () {
+		                        var next = getState();
+		                        if (!(equality === undefined ? defaultEquality : equality)(state, next)) {
+		                            state = next;
+		                            result = resolvedMemoize.memoize(callback).apply(undefined, arguments);
+		                        }
+		                        return result;
+		                    };
+		                }
+		            });
+		        };
+		    }
+		};
+		
+		var Composite = function Composite(data) {
 		    _classCallCheck(this, Composite);
 		
 		    var structure = data.structure,
@@ -6661,10 +6706,12 @@
 		        return typeof leaf === 'function' ? new Composite({ reducer: leaf }) : leaf;
 		    })(structure);
 		
-		    var injection = function injection(parameter, withStructure, withoutStructure, native) {
-		        return typeof parameter === 'function' ? structure === undefined ? parameter : parameter(compositeStructure) : (native === undefined ? function (a) {
-		            return a;
-		        } : native)(structure === undefined ? withoutStructure : withStructure(compositeStructure));
+		    var injection = function injection(parameter, withStructure, withoutStructure, wrapper) {
+		        if (typeof parameter === 'function') {
+		            return structure === undefined ? parameter : parameter(compositeStructure);
+		        }
+		        var beforeWrapper = structure === undefined ? withoutStructure : withStructure(compositeStructure);
+		        return wrapper === undefined ? beforeWrapper : wrapper(beforeWrapper);
 		    };
 		
 		    this.reducer = injection(reducer, _Reducer2.default);
@@ -6674,52 +6721,19 @@
 		                return next(action);
 		            };
 		        };
-		    }, function (middlewareCallback) {
-		        return function (middleware) {
-		            return function (_ref) {
-		                var dispatch = _ref.dispatch,
-		                    getState = _ref.getState;
-		                return function (next) {
-		                    return function (action) {
-		                        return action === undefined ? next(action) : middleware({ dispatch: dispatch, getState: getState })(next)(action);
-		                    };
-		                };
-		            };
-		        }(middlewareCallback);
 		    });
-		    this.equality = injection(equality, _Equality2.default, function (prev, next) {
-		        return prev === next;
-		    });
+		    this.equality = injection(equality, _Equality2.default, defaultEquality);
 		    this.subscribe = injection(subscribe, _Subscribe2.default, function (dispatch, getState) {
 		        return function (listener) {
 		            return function () {
 		                return listener({ dispatch: dispatch, getState: getState });
 		            };
 		        };
-		    }, function (subscribeCallback) {
-		        return function (originalSubscribe) {
-		            return function (equality) {
-		                return function (dispatch, getState) {
-		                    var subscribe = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
-		                    return function (listeners) {
-		                        if (listeners === undefined) {
-		                            return function () {};
-		                        }
-		                        var initializedSubscribe = originalSubscribe(dispatch, getState)(listeners);
-		                        var state = getState();
-		                        var listener = function listener() {
-		                            var next = getState();
-		                            if (!equality(state, next)) {
-		                                state = next;
-		                                initializedSubscribe();
-		                            }
-		                        };
-		                        return typeof subscribe === 'function' ? subscribe(listener) : listener;
-		                    };
-		                };
-		            };
-		        }(subscribeCallback)(_this.equality);
-		    });
+		    }, function (equality) {
+		        return function (originalSubscriber) {
+		            return Wrappers.Subscribe(originalSubscriber, equality);
+		        };
+		    }(this.equality));
 		
 		    this.redux = injection(redux, _Redux2.default, function (dispatch, getState, subscribe) {
 		        return {
@@ -6731,29 +6745,11 @@
 		        return { memoize: function memoize(callback) {
 		                return callback;
 		            } };
-		    }, function (memoizeCallback) {
+		    }, function (equality) {
 		        return function (originalMemoize) {
-		            return function (equality) {
-		                return function (getState) {
-		                    var resolvedMemoize = originalMemoize(getState);
-		                    return _extends({}, resolvedMemoize, {
-		                        memoize: function memoize(callback) {
-		                            var state = undefined,
-		                                result = undefined;
-		                            return function () {
-		                                var next = getState();
-		                                if (!equality(state, next)) {
-		                                    state = next;
-		                                    result = resolvedMemoize.memoize(callback).apply(undefined, arguments);
-		                                }
-		                                return result;
-		                            };
-		                        }
-		                    });
-		                };
-		            };
-		        }(memoizeCallback)(_this.equality);
-		    });
+		            return Wrappers.Memoize(originalMemoize, equality);
+		        };
+		    }(this.equality));
 		};
 		
 		exports.default = Composite;
@@ -7342,7 +7338,7 @@
 		                return middleware(next);
 		            })(compositeStructure, (0, _ReduxAction.InitAction)(next), initMiddleware);
 		            return function (action) {
-		                return (0, _WalkComposite2.default)()(function (composite, next, action) {
+		                return action === undefined ? next(action) : (0, _WalkComposite2.default)()(function (composite, next, action) {
 		                    return action === undefined ? undefined : next(action);
 		                })(compositeStructure, initNextMiddleware, (0, _ReduxAction.ReduxAction)(action));
 		            };
