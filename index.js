@@ -82,12 +82,11 @@
 	
 	var application = exports.application = function application() {
 	    var builder = (0, _index.Builder)({ textarea: 100, buttons: [0, 1000, 2000] });
+	    var composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || _redux.compose;
 	    var store = (0, _redux.createStore)(builder.composite.reducer, {
 	        textarea: (0, _index2.Reducer)(),
 	        buttons: [(0, _index3.Reducer)(), (0, _index3.Reducer)(), (0, _index3.Reducer)()]
-	    }, (0, _redux.compose)((0, _redux.applyMiddleware)(builder.composite.middleware), window.devToolsExtension ? window.devToolsExtension() : function (f) {
-	        return f;
-	    }));
+	    }, composeEnhancers((0, _redux.applyMiddleware)(builder.composite.middleware)));
 	    var CompositeComponent = builder.component(store);
 	
 	    var compositeRender = function compositeRender() {
@@ -1423,21 +1422,17 @@
 	                subscribe = _ref.subscribe;
 	
 	            var redux = (0, _reduxComposite.Redux)(composite)({ dispatch: dispatch, getState: getState, subscribe: subscribe });
-	            var listener = function listener(i, _ref2) {
-	                var reduxObject = _ref2.redux;
+	            var listener = function listener(i) {
+	                return function (_ref2) {
+	                    var getState = _ref2.getState;
 	
-	                if (reduxObject.getState().clicked) {
-	                    redux.textarea.redux.dispatch({ type: 'ADD', todo: 'Button ' + i });
-	                }
+	                    if (getState().clicked) {
+	                        redux.textarea.redux.dispatch({ type: 'ADD', todo: 'Button ' + i });
+	                    }
+	                };
 	            };
 	            composite.subscribe(dispatch, getState, subscribe)({
-	                buttons: [function () {
-	                    return listener(0, redux.buttons[0]);
-	                }, function () {
-	                    return listener(1, redux.buttons[1]);
-	                }, function () {
-	                    return listener(2, redux.buttons[2]);
-	                }]
+	                buttons: [listener(0), listener(1), listener(2)]
 	            });
 	            return (0, _Component2.default)(redux, composite.memoize(getState));
 	        }
@@ -6554,13 +6549,17 @@
 		
 		var _Subscribe2 = _interopRequireDefault(_Subscribe);
 		
+		var _Redux3 = __webpack_require__(/*! ./Composite/Redux */ 13);
+		
+		var _Redux4 = _interopRequireDefault(_Redux3);
+		
 		var _Memoize = __webpack_require__(/*! ./Composite/Memoize */ 14);
 		
 		var _Memoize2 = _interopRequireDefault(_Memoize);
 		
 		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 		
-		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Memoize: _Memoize2.default };
+		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux4.default, Memoize: _Memoize2.default };
 		var Composite = exports.Composite = function Composite(parameters) {
 		  return new _Composite2.default(parameters);
 		};
@@ -6739,14 +6738,11 @@
 		                    var resolvedMemoize = originalMemoize(getState);
 		                    return _extends({}, resolvedMemoize, {
 		                        memoize: function memoize(callback) {
-		                            if (callback === undefined) {
-		                                return function () {};
-		                            }
-		                            var state = getState(),
+		                            var state = undefined,
 		                                result = undefined;
 		                            return function () {
 		                                var next = getState();
-		                                if (result === undefined || !equality(state, next)) {
+		                                if (!equality(state, next)) {
 		                                    state = next;
 		                                    result = resolvedMemoize.memoize(callback).apply(undefined, arguments);
 		                                }

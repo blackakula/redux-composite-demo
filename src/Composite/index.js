@@ -8,16 +8,16 @@ export const Builder = timeouts => {
         composite,
         component: ({dispatch, getState, subscribe}) => {
             const redux = Redux(composite)({dispatch, getState, subscribe});
-            const listener = (i, {redux: reduxObject}) => {
-                if (reduxObject.getState().clicked) {
+            const listener = i => ({getState}) => {
+                if (getState().clicked) {
                     redux.textarea.redux.dispatch({type: 'ADD', todo: `Button ${i}`});
                 }
             };
             composite.subscribe(dispatch, getState, subscribe)({
                 buttons: [
-                    () => listener(0, redux.buttons[0]),
-                    () => listener(1, redux.buttons[1]),
-                    () => listener(2, redux.buttons[2]),
+                    listener(0),
+                    listener(1),
+                    listener(2)
                 ]
             });
             return Component(redux, composite.memoize(getState));
