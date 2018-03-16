@@ -7,13 +7,10 @@ export const Composite = timeouts => {
         reducer: TextareaReducer,
         middleware: TextareaMiddleware(timeouts.textarea)
     });
-    const buttons = (new Array(3)).fill(null).reduce((result, v, i) => [
-        ...result,
-        ReduxComposite({
-            reducer: ButtonReducer,
-            middleware: ButtonMiddleware(timeouts.buttons[i])
-        })
-    ], []);
+    const buttons = timeouts.buttons.map(timeout => ReduxComposite({
+        reducer: ButtonReducer,
+        middleware: ButtonMiddleware(timeout)
+    }));
     return Structure({
         textarea,
         buttons

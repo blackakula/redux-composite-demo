@@ -6406,19 +6406,17 @@
 	
 	var _index2 = __webpack_require__(/*! ../Button/index */ 65);
 	
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-	
 	var Composite = exports.Composite = function Composite(timeouts) {
 	    var textarea = (0, _reduxComposite.Composite)({
 	        reducer: _index.Reducer,
 	        middleware: (0, _index.Middleware)(timeouts.textarea)
 	    });
-	    var buttons = new Array(3).fill(null).reduce(function (result, v, i) {
-	        return [].concat(_toConsumableArray(result), [(0, _reduxComposite.Composite)({
+	    var buttons = timeouts.buttons.map(function (timeout) {
+	        return (0, _reduxComposite.Composite)({
 	            reducer: _index2.Reducer,
-	            middleware: (0, _index2.Middleware)(timeouts.buttons[i])
-	        })]);
-	    }, []);
+	            middleware: (0, _index2.Middleware)(timeout)
+	        });
+	    });
 	    return (0, _reduxComposite.Structure)({
 	        textarea: textarea,
 	        buttons: buttons
