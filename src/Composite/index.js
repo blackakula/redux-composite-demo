@@ -13,6 +13,23 @@ export const Builder = timeouts => {
                     redux.textarea.redux.dispatch({type: 'ADD', todo: `Button ${i}`});
                 }
             };
+            const asyncListener = () => {
+                let prev = undefined;
+                return ({getState}) => {
+                    const state = getState();
+                    if (typeof state.selectedSubreddit === 'string' && typeof state.postsBySubreddit === 'object') {
+                        const subreddit = state.selectedSubreddit;
+                        if (typeof state.postsBySubreddit[subreddit] === 'object'
+                            && state.postsBySubreddit[subreddit].isFetching === false
+                            && state.postsBySubreddit[subreddit].didInvalidate === false
+                            && prev !== state.postsBySubreddit
+                        ) {
+                            redux.textarea.redux.dispatch({type: 'ADD', todo: `Subreddit ${subreddit} is fetched`});
+                        }
+                        prev = state.postsBySubreddit;
+                    }
+                }
+            };
             composite.subscribe(dispatch, getState, subscribe)({
                 buttons: [
                     listener(0),
@@ -23,7 +40,8 @@ export const Builder = timeouts => {
                             redux.textarea.redux.dispatch({type: 'ADD', todo: `Button ${3}`});
                         }
                     }
-                ]
+                ],
+                async: asyncListener()
             });
             return Component(redux, composite.memoize(getState));
         }

@@ -2,6 +2,10 @@ import {Component as TextareaComponent} from '../Textarea/index';
 import {Component as ButtonComponent} from '../Button/index';
 import * as React from 'react';
 
+// For Redux Async
+import { Provider } from 'react-redux';
+import ReduxAsync from '../ReduxAsync/containers/App';
+
 export const Component = (redux, memoize) => {
     const buttonCss = {
         display: 'block',
@@ -22,6 +26,9 @@ export const Component = (redux, memoize) => {
                 <Button2 {...buttons[2]}/>
                 <Button3 {...buttons[3]}/>
             </div>
+            <Provider store={redux.async.redux}>
+                <ReduxAsync />
+            </Provider>
         </div>);
     });
 };
