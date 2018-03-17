@@ -1564,7 +1564,7 @@
   \***********************************/
 /***/ (function(module, exports, __webpack_require__) {
 
-	'use strict';
+	"use strict";
 	
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
@@ -1581,10 +1581,11 @@
 	    var highlighted = _ref.highlighted,
 	        todos = _ref.todos;
 	
-	    return React.createElement('textarea', {
-	        rows: '30',
+	    return React.createElement("textarea", {
+	        rows: "25",
+	        cols: "30",
 	        style: { backgroundColor: highlighted ? '#AFDFAF' : 'white' },
-	        readOnly: 'true',
+	        readOnly: "true",
 	        value: todos.join("\r\n")
 	    });
 	};
