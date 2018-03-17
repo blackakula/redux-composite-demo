@@ -81,7 +81,7 @@
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
 	var application = exports.application = function application() {
-	    var builder = (0, _index.Builder)({ textarea: 100, buttons: [0, 1000, 2000] });
+	    var builder = (0, _index.Builder)({ textarea: 100, buttons: [0, 1000, 2000, 3000] });
 	    var composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || _redux.compose;
 	    var store = (0, _redux.createStore)(builder.composite.reducer, {
 	        textarea: (0, _index2.Reducer)(),
@@ -1432,7 +1432,13 @@
 	                };
 	            };
 	            composite.subscribe(dispatch, getState, subscribe)({
-	                buttons: [listener(0), listener(1), listener(2)]
+	                buttons: [listener(0), listener(1), listener(2), function (_ref3) {
+	                    var getState = _ref3.getState;
+	
+	                    if (getState().clicked === false) {
+	                        redux.textarea.redux.dispatch({ type: 'ADD', todo: 'Button ' + 3 });
+	                    }
+	                }]
 	            });
 	            return (0, _Component2.default)(redux, composite.memoize(getState));
 	        }
@@ -1470,12 +1476,13 @@
 	        display: 'block',
 	        marginTop: '3px'
 	    };
-	    var buttonsComponents = [0, 1, 2].map(function (index) {
+	    var buttonsComponents = [0, 1, 2, 3].map(function (index) {
 	        return (0, _index2.Component)('Button (' + index + ' sec)', buttonCss)(redux.buttons[index].redux);
 	    });
 	    var Button0 = memoize.structure.buttons[0].memoize(buttonsComponents[0]);
 	    var Button1 = memoize.structure.buttons[1].memoize(buttonsComponents[1]);
 	    var Button2 = memoize.structure.buttons[2].memoize(buttonsComponents[2]);
+	    var Button3 = memoize.structure.buttons[3].memoize(buttonsComponents[3]);
 	    var Textarea = memoize.structure.textarea.memoize(_index.Component);
 	    return memoize.memoize(function (_ref) {
 	        var textarea = _ref.textarea,
@@ -1490,7 +1497,8 @@
 	                null,
 	                React.createElement(Button0, buttons[0]),
 	                React.createElement(Button1, buttons[1]),
-	                React.createElement(Button2, buttons[2])
+	                React.createElement(Button2, buttons[2]),
+	                React.createElement(Button3, buttons[3])
 	            )
 	        );
 	    });

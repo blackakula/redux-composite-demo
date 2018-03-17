@@ -17,7 +17,12 @@ export const Builder = timeouts => {
                 buttons: [
                     listener(0),
                     listener(1),
-                    listener(2)
+                    listener(2),
+                    ({getState}) => {
+                        if (getState().clicked === false) {
+                            redux.textarea.redux.dispatch({type: 'ADD', todo: `Button ${3}`});
+                        }
+                    }
                 ]
             });
             return Component(redux, composite.memoize(getState));

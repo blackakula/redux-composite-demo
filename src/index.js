@@ -6,7 +6,7 @@ import {render} from 'react-dom';
 import * as React from 'react';
 
 export const application = () => {
-    const builder = Builder({textarea: 100, buttons: [0, 1000, 2000]});
+    const builder = Builder({textarea: 100, buttons: [0, 1000, 2000, 3000]});
     const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
     let store = createStore(
         builder.composite.reducer,
