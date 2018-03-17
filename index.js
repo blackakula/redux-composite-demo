@@ -6523,6 +6523,18 @@
 		  });
 		});
 		
+		var _Memoize = __webpack_require__(/*! ./Memoize */ 16);
+		
+		Object.keys(_Memoize).forEach(function (key) {
+		  if (key === "default" || key === "__esModule") return;
+		  Object.defineProperty(exports, key, {
+		    enumerable: true,
+		    get: function get() {
+		      return _Memoize[key];
+		    }
+		  });
+		});
+		
 		var _Composite = __webpack_require__(/*! ./Composite */ 3);
 		
 		var _Composite2 = _interopRequireDefault(_Composite);
@@ -6535,7 +6547,7 @@
 		
 		var _Reducer2 = _interopRequireDefault(_Reducer);
 		
-		var _Middleware = __webpack_require__(/*! ./Composite/Middleware */ 8);
+		var _Middleware = __webpack_require__(/*! ./Composite/Middleware */ 9);
 		
 		var _Middleware2 = _interopRequireDefault(_Middleware);
 		
@@ -6551,17 +6563,19 @@
 		
 		var _Redux4 = _interopRequireDefault(_Redux3);
 		
-		var _Memoize = __webpack_require__(/*! ./Composite/Memoize */ 14);
+		var _Memoize2 = __webpack_require__(/*! ./Composite/Memoize */ 14);
 		
-		var _Memoize2 = _interopRequireDefault(_Memoize);
+		var _Memoize3 = _interopRequireDefault(_Memoize2);
+		
+		var _Memoize4 = _interopRequireDefault(_Memoize);
 		
 		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 		
-		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux4.default, Memoize: _Memoize2.default };
+		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux4.default, Memoize: _Memoize3.default };
 		var Composite = exports.Composite = function Composite(parameters) {
 		  return new _Composite2.default(parameters);
 		};
-		exports.default = { Composite: Composite, Structure: _Structure2.default, Redux: _Redux2.default, Defaults: Defaults, Wrappers: _Composite.Wrappers };
+		exports.default = { Composite: Composite, Structure: _Structure2.default, Redux: _Redux2.default, Memoize: _Memoize4.default, Defaults: Defaults, Wrappers: _Composite.Wrappers };
 	
 	/***/ }),
 	/* 2 */
@@ -6612,7 +6626,7 @@
 		
 		var _Reducer2 = _interopRequireDefault(_Reducer);
 		
-		var _Middleware = __webpack_require__(/*! ./Composite/Middleware */ 8);
+		var _Middleware = __webpack_require__(/*! ./Composite/Middleware */ 9);
 		
 		var _Middleware2 = _interopRequireDefault(_Middleware);
 		
@@ -7239,15 +7253,23 @@
 		
 		var _ReduxAction = __webpack_require__(/*! ../Helper/ReduxAction */ 7);
 		
-		var _ReduxAction2 = _interopRequireDefault(_ReduxAction);
+		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 8);
+		
+		var _DefaultMutationMethod2 = _interopRequireDefault(_DefaultMutationMethod);
 		
 		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 		
 		var Reducer = function Reducer(compositeStructure) {
 		    return function (state, action) {
-		        return (0, _WalkComposite2.default)()(function (composite, state, action) {
+		        return (0, _WalkComposite2.default)({
+		            mutationMethod: function mutationMethod(key) {
+		                return function (composite, state, action) {
+		                    return [(0, _DefaultMutationMethod2.default)(key)(composite), (0, _DefaultMutationMethod2.default)(key)(state), (0, _ReduxAction.ActionMutateMethod)(action, key)];
+		                };
+		            }
+		        })(function (composite, state, action) {
 		            return state === undefined || action !== undefined ? composite.reducer(state, action) : state;
-		        })(compositeStructure, state, (0, _ReduxAction2.default)(action));
+		        })(compositeStructure, state, (0, _ReduxAction.ReduxAction)(action));
 		    };
 		};
 		exports.default = Reducer;
@@ -7257,7 +7279,54 @@
 	/*!***********************************!*\
 	  !*** ./src/Helper/ReduxAction.js ***!
 	  \***********************************/
-	/***/ (function(module, exports) {
+	/***/ (function(module, exports, __webpack_require__) {
+	
+		'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		    value: true
+		});
+		exports.ActionMutateMethod = exports.MutateMethod = exports.InitAction = exports.ReduxAction = undefined;
+		
+		var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+		
+		var _DefaultMutationMethod = __webpack_require__(/*! ./DefaultMutationMethod */ 8);
+		
+		var _DefaultMutationMethod2 = _interopRequireDefault(_DefaultMutationMethod);
+		
+		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+		
+		function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+		
+		var ReduxAction = function ReduxAction(action) {
+		    return (typeof action === 'undefined' ? 'undefined' : _typeof(action)) === 'object' && action.type === 'COMPOSITE' ? action.composite : action;
+		};
+		var InitAction = function InitAction(callback) {
+		    return function (action) {
+		        return callback({ type: 'COMPOSITE', composite: action });
+		    };
+		};
+		var MutateMethod = function MutateMethod(callback, key) {
+		    return function (action) {
+		        return callback(_defineProperty({}, key, action));
+		    };
+		};
+		var ActionMutateMethod = function ActionMutateMethod(action, key) {
+		    return (typeof action === 'undefined' ? 'undefined' : _typeof(action)) === 'object' && typeof action.type === 'string' && action.type.indexOf('@@') === 0 ? action : (0, _DefaultMutationMethod2.default)(key)(action);
+		};
+		
+		exports.ReduxAction = ReduxAction;
+		exports.InitAction = InitAction;
+		exports.MutateMethod = MutateMethod;
+		exports.ActionMutateMethod = ActionMutateMethod;
+		exports.default = ReduxAction;
+	
+	/***/ }),
+	/* 8 */
+	/*!*********************************************!*\
+	  !*** ./src/Helper/DefaultMutationMethod.js ***!
+	  \*********************************************/
+	/***/ (function(module, exports, __webpack_require__) {
 	
 		'use strict';
 		
@@ -7265,31 +7334,17 @@
 		  value: true
 		});
 		
-		var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+		var _walkComposite = __webpack_require__(/*! walk-composite */ 5);
 		
-		function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-		
-		var ReduxAction = function ReduxAction(action) {
-		  return (typeof action === 'undefined' ? 'undefined' : _typeof(action)) === 'object' && action.type === 'COMPOSITE' ? action.composite : action;
-		};
-		var InitAction = function InitAction(callback) {
-		  return function (action) {
-		    return callback({ type: 'COMPOSITE', composite: action });
+		var DefaultMutationMethod = function DefaultMutationMethod(key) {
+		  return function (data) {
+		    return _walkComposite.Defaults.MutationMethod(key)(data)[0];
 		  };
 		};
-		var MutateMethod = function MutateMethod(callback, key) {
-		  return function (action) {
-		    return callback(_defineProperty({}, key, action));
-		  };
-		};
-		
-		exports.ReduxAction = ReduxAction;
-		exports.InitAction = InitAction;
-		exports.MutateMethod = MutateMethod;
-		exports.default = ReduxAction;
+		exports.default = DefaultMutationMethod;
 	
 	/***/ }),
-	/* 8 */
+	/* 9 */
 	/*!*************************************!*\
 	  !*** ./src/Composite/Middleware.js ***!
 	  \*************************************/
@@ -7307,7 +7362,7 @@
 		
 		var _ReduxAction = __webpack_require__(/*! ../Helper/ReduxAction */ 7);
 		
-		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 9);
+		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 8);
 		
 		var _DefaultMutationMethod2 = _interopRequireDefault(_DefaultMutationMethod);
 		
@@ -7347,28 +7402,6 @@
 		exports.default = Middleware;
 	
 	/***/ }),
-	/* 9 */
-	/*!*********************************************!*\
-	  !*** ./src/Helper/DefaultMutationMethod.js ***!
-	  \*********************************************/
-	/***/ (function(module, exports, __webpack_require__) {
-	
-		'use strict';
-		
-		Object.defineProperty(exports, "__esModule", {
-		  value: true
-		});
-		
-		var _walkComposite = __webpack_require__(/*! walk-composite */ 5);
-		
-		var DefaultMutationMethod = function DefaultMutationMethod(key) {
-		  return function (data) {
-		    return _walkComposite.Defaults.MutationMethod(key)(data)[0];
-		  };
-		};
-		exports.default = DefaultMutationMethod;
-	
-	/***/ }),
 	/* 10 */
 	/*!********************************!*\
 	  !*** ./src/Helper/InitWalk.js ***!
@@ -7389,7 +7422,7 @@
 		
 		var _ReduxAction = __webpack_require__(/*! ../Helper/ReduxAction */ 7);
 		
-		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 9);
+		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 8);
 		
 		var _DefaultMutationMethod2 = _interopRequireDefault(_DefaultMutationMethod);
 		
@@ -7513,7 +7546,7 @@
 		
 		var _ReduxAction = __webpack_require__(/*! ../Helper/ReduxAction */ 7);
 		
-		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 9);
+		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 8);
 		
 		var _DefaultMutationMethod2 = _interopRequireDefault(_DefaultMutationMethod);
 		
@@ -7563,7 +7596,7 @@
 		
 		var _WalkComposite2 = _interopRequireDefault(_WalkComposite);
 		
-		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 9);
+		var _DefaultMutationMethod = __webpack_require__(/*! ../Helper/DefaultMutationMethod */ 8);
 		
 		var _DefaultMutationMethod2 = _interopRequireDefault(_DefaultMutationMethod);
 		
@@ -7616,6 +7649,52 @@
 		};
 		
 		exports.default = Redux;
+	
+	/***/ }),
+	/* 16 */
+	/*!************************!*\
+	  !*** ./src/Memoize.js ***!
+	  \************************/
+	/***/ (function(module, exports) {
+	
+		'use strict';
+		
+		Object.defineProperty(exports, "__esModule", {
+		    value: true
+		});
+		var memoizeToggle = function memoizeToggle(memoize) {
+		    var state = false;
+		    return memoize(function () {
+		        state = !state;
+		        return state;
+		    });
+		};
+		
+		var Memoize = exports.Memoize = function Memoize() {
+		    for (var _len = arguments.length, memoizeChain = Array(_len), _key = 0; _key < _len; _key++) {
+		        memoizeChain[_key] = arguments[_key];
+		    }
+		
+		    var memoizeToggleChain = memoizeChain.map(function (memoize) {
+		        return memoizeToggle(memoize);
+		    });
+		    return function (callback) {
+		        var state = undefined,
+		            result = undefined;
+		        return function () {
+		            var next = memoizeToggleChain.map(function (memoizeToggleItem) {
+		                return memoizeToggleItem() ? '1' : '0';
+		            }).join('');
+		            if (next !== state) {
+		                state = next;
+		                result = callback.apply(undefined, arguments);
+		            }
+		            return result;
+		        };
+		    };
+		};
+		
+		exports.default = Memoize;
 	
 	/***/ })
 	/******/ ]);
