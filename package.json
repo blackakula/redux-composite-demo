@@ -25,7 +25,7 @@
     "react": "^15.2.1",
     "react-dom": "^15.2.1",
     "webpack": "^1.13.1",
-    "redux-composite": "^0.0.23"
+    "redux-composite": "~0.1.*"
   },
   "babel": {
     "presets": [
