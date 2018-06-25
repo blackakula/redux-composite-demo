@@ -83,7 +83,9 @@
 	var application = exports.application = function application() {
 	    var builder = (0, _index.Builder)({ textarea: 100, buttons: [0, 1000, 2000] });
 	    var composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || _redux.compose;
-	    var store = (0, _redux.createStore)(builder.composite.reducer, {
+	    var store = (0, _redux.createStore)(builder.composite.reducer,
+	    // Initial state
+	    {
 	        textarea: (0, _index2.Reducer)(),
 	        buttons: [(0, _index3.Reducer)(), (0, _index3.Reducer)(), (0, _index3.Reducer)()]
 	    }, composeEnhancers((0, _redux.applyMiddleware)(builder.composite.middleware)));
@@ -1408,8 +1410,6 @@
 	
 	var _Composite2 = _interopRequireDefault(_Composite);
 	
-	var _reduxComposite = __webpack_require__(/*! redux-composite */ 70);
-	
 	var _Button = __webpack_require__(/*! ../Button */ 65);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -1418,30 +1418,29 @@
 	    var composite = (0, _Composite2.default)(timeouts);
 	    return {
 	        composite: composite,
-	        component: function component(_ref) {
-	            var dispatch = _ref.dispatch,
-	                getState = _ref.getState,
-	                subscribe = _ref.subscribe;
-	
-	            var redux = (0, _reduxComposite.Redux)(composite)({ dispatch: dispatch, getState: getState, subscribe: subscribe });
+	        component: function component(store) {
+	            composite.init(store);
+	            var buttonKeys = Object.keys(timeouts.buttons);
 	            var listener = function listener(i) {
-	                return function (_ref2) {
-	                    var getState = _ref2.getState;
+	                return function (_ref) {
+	                    var getState = _ref.getState;
 	
 	                    if (getState().clicked) {
-	                        redux.textarea.redux.dispatch({ type: 'ADD', todo: 'Button ' + i });
+	                        composite.store.textarea.dispatch({ type: 'ADD', todo: 'Button ' + i });
 	                    }
 	                };
 	            };
-	            composite.subscribe(dispatch, getState, subscribe)({
-	                buttons: [listener(0), listener(1), listener(2)]
+	            composite.subscribe({
+	                buttons: buttonKeys.map(function (key) {
+	                    return listener(key);
+	                })
 	            });
 	            var buttonCss = {
 	                display: 'block',
 	                marginTop: '3px'
 	            };
-	            return (0, _Component2.default)((0, _reduxComposite.Memoize)(composite, getState), [0, 1, 2].map(function (index) {
-	                return (0, _Button.Component)('Button (' + index + ' sec)', buttonCss)(redux.buttons[index].redux);
+	            return (0, _Component2.default)(composite.memoize, buttonKeys.map(function (index) {
+	                return (0, _Button.Component)('Button (' + index + ' sec)', buttonCss)(composite.store.buttons[index]);
 	            }));
 	        }
 	    };
@@ -6517,39 +6516,11 @@
 		  });
 		});
 		
-		var _Redux = __webpack_require__(/*! ./Redux */ 15);
-		
-		Object.keys(_Redux).forEach(function (key) {
-		  if (key === "default" || key === "__esModule") return;
-		  Object.defineProperty(exports, key, {
-		    enumerable: true,
-		    get: function get() {
-		      return _Redux[key];
-		    }
-		  });
-		});
-		
-		var _Memoize = __webpack_require__(/*! ./Memoize */ 16);
-		
-		Object.keys(_Memoize).forEach(function (key) {
-		  if (key === "default" || key === "__esModule") return;
-		  Object.defineProperty(exports, key, {
-		    enumerable: true,
-		    get: function get() {
-		      return _Memoize[key];
-		    }
-		  });
-		});
-		
 		var _Composite = __webpack_require__(/*! ./Composite */ 3);
 		
 		var _Composite2 = _interopRequireDefault(_Composite);
 		
 		var _Structure2 = _interopRequireDefault(_Structure);
-		
-		var _Redux2 = _interopRequireDefault(_Redux);
-		
-		var _Memoize2 = _interopRequireDefault(_Memoize);
 		
 		var _Reducer = __webpack_require__(/*! ./Composite/Reducer */ 6);
 		
@@ -6567,21 +6538,21 @@
 		
 		var _Subscribe2 = _interopRequireDefault(_Subscribe);
 		
-		var _Redux3 = __webpack_require__(/*! ./Composite/Redux */ 13);
+		var _Redux = __webpack_require__(/*! ./Composite/Redux */ 13);
 		
-		var _Redux4 = _interopRequireDefault(_Redux3);
+		var _Redux2 = _interopRequireDefault(_Redux);
 		
-		var _Memoize3 = __webpack_require__(/*! ./Composite/Memoize */ 14);
+		var _Memoize = __webpack_require__(/*! ./Composite/Memoize */ 14);
 		
-		var _Memoize4 = _interopRequireDefault(_Memoize3);
+		var _Memoize2 = _interopRequireDefault(_Memoize);
 		
 		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 		
-		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux4.default, Memoize: _Memoize4.default };
+		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux2.default, Memoize: _Memoize2.default };
 		var Composite = exports.Composite = function Composite(parameters) {
 		  return new _Composite2.default(parameters);
 		};
-		exports.default = { Composite: Composite, Structure: _Structure2.default, Redux: _Redux2.default, Memoize: _Memoize2.default, Defaults: Defaults, Wrappers: _Composite.Wrappers };
+		exports.default = { Composite: Composite, Structure: _Structure2.default, Defaults: Defaults, Wrappers: _Composite.Wrappers };
 	
 	/***/ }),
 	/* 2 */
@@ -6653,6 +6624,14 @@
 		var _Memoize = __webpack_require__(/*! ./Composite/Memoize */ 14);
 		
 		var _Memoize2 = _interopRequireDefault(_Memoize);
+		
+		var _Redux3 = __webpack_require__(/*! ./Redux */ 15);
+		
+		var _Redux4 = _interopRequireDefault(_Redux3);
+		
+		var _Memoize3 = __webpack_require__(/*! ./Memoize */ 16);
+		
+		var _Memoize4 = _interopRequireDefault(_Memoize3);
 		
 		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 		
@@ -6734,6 +6713,8 @@
 		};
 		
 		var Composite = function Composite(data) {
+		    var _this = this;
+		
 		    _classCallCheck(this, Composite);
 		
 		    var structure = data.structure,
@@ -6742,7 +6723,8 @@
 		        equality = data.equality,
 		        subscribe = data.subscribe,
 		        redux = data.redux,
-		        memoize = data.memoize;
+		        memoize = data.memoize,
+		        init = data.init;
 		
 		
 		    if (structure === undefined && typeof reducer !== 'function') {
@@ -6795,6 +6777,27 @@
 		            return Wrappers.Memoize(originalMemoize, equality);
 		        };
 		    }(this.equality));
+		
+		    this.init = function (reduxStore) {
+		        return function (composite) {
+		            composite.memoize = function (memoize) {
+		                return memoize(composite.memoize, reduxStore.getState);
+		            }(init !== undefined && typeof init.memoize === 'function' ? init.memoize : _Memoize4.default);
+		
+		            var _ref2 = function (store) {
+		                return store(composite)(reduxStore);
+		            }(init !== undefined && typeof init.store === 'function' ? init.store : _Redux4.default),
+		                store = _ref2.store,
+		                structure = _ref2.structure;
+		
+		            delete composite.redux;
+		            composite.store = structure;
+		            composite.getState = store.getState;
+		            composite.dispatch = store.dispatch;
+		            composite.subscribe = store.subscribe;
+		            return composite;
+		        }(_this);
+		    };
 		};
 		
 		exports.default = Composite;
@@ -7665,19 +7668,60 @@
 	/*!**********************!*\
 	  !*** ./src/Redux.js ***!
 	  \**********************/
-	/***/ (function(module, exports) {
+	/***/ (function(module, exports, __webpack_require__) {
 	
-		"use strict";
+		'use strict';
 		
 		Object.defineProperty(exports, "__esModule", {
 		    value: true
 		});
+		exports.Redux = undefined;
+		
+		var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+		
+		var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+		
+		var _walkComposite = __webpack_require__(/*! walk-composite */ 5);
+		
+		var useStructure = function useStructure(node) {
+		    return _typeof(node.redux) === 'object' && node.structure !== undefined;
+		};
+		
+		var WalkRedux = function WalkRedux(originalStore) {
+		    var parameters = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+		    return (0, _walkComposite.Walk)(_extends({
+		        leafCondition: function leafCondition(node) {
+		            return node.redux !== undefined && (node.structure === undefined || originalStore !== node);
+		        },
+		        keysMethod: function keysMethod(node) {
+		            return _walkComposite.Defaults.KeysMethod(useStructure(node) ? node.structure : node);
+		        },
+		        mutationMethod: function mutationMethod(key) {
+		            return function (node) {
+		                return [(useStructure(node) ? node.structure : node)[key]];
+		            };
+		        },
+		        walkMethod: function walkMethod(parameters) {
+		            return WalkRedux(originalStore, parameters);
+		        }
+		    }, parameters));
+		};
+		
+		var ReduxByRedux = function ReduxByRedux(redux) {
+		    return {
+		        structure: WalkRedux(redux)(function (leaf) {
+		            return useStructure(leaf) ? ReduxByRedux(leaf) : leaf.redux;
+		        })(redux),
+		        store: redux.redux
+		    };
+		};
+		
 		var Redux = exports.Redux = function Redux(composite) {
 		    return function (_ref) {
 		        var dispatch = _ref.dispatch,
 		            getState = _ref.getState,
 		            subscribe = _ref.subscribe;
-		        return composite.redux(dispatch, getState, composite.subscribe(dispatch, getState, subscribe)).structure;
+		        return ReduxByRedux(composite.redux(dispatch, getState, composite.subscribe(dispatch, getState, subscribe)));
 		    };
 		};
 		
@@ -7755,8 +7799,8 @@
 		    };
 		};
 		
-		var Memoize = exports.Memoize = function Memoize(composite, getState) {
-		    return MemoizeByMemoize(composite.memoize(getState))(getState);
+		var Memoize = exports.Memoize = function Memoize(memoize, getState) {
+		    return MemoizeByMemoize(memoize(getState))(getState);
 		};
 		
 		exports.default = Memoize;
