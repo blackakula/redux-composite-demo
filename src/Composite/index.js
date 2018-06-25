@@ -1,6 +1,7 @@
 import Component from './Component';
 import Composite from './Composite';
-import {Redux} from 'redux-composite';
+import {Redux, Memoize} from 'redux-composite';
+import {Component as Button} from "../Button";
 
 export const Builder = timeouts => {
     const composite = Composite(timeouts);
@@ -20,7 +21,11 @@ export const Builder = timeouts => {
                     listener(2)
                 ]
             });
-            return Component(redux, composite.memoize(getState));
+            const buttonCss = {
+                display: 'block',
+                marginTop: '3px'
+            };
+            return Component(Memoize(composite, getState), [0, 1, 2].map(index => Button(`Button (${index} sec)`, buttonCss)(redux.buttons[index].redux)));
         }
     };
 };

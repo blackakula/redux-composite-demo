@@ -1410,6 +1410,8 @@
 	
 	var _reduxComposite = __webpack_require__(/*! redux-composite */ 70);
 	
+	var _Button = __webpack_require__(/*! ../Button */ 65);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	var Builder = exports.Builder = function Builder(timeouts) {
@@ -1434,7 +1436,13 @@
 	            composite.subscribe(dispatch, getState, subscribe)({
 	                buttons: [listener(0), listener(1), listener(2)]
 	            });
-	            return (0, _Component2.default)(redux, composite.memoize(getState));
+	            var buttonCss = {
+	                display: 'block',
+	                marginTop: '3px'
+	            };
+	            return (0, _Component2.default)((0, _reduxComposite.Memoize)(composite, getState), [0, 1, 2].map(function (index) {
+	                return (0, _Button.Component)('Button (' + index + ' sec)', buttonCss)(redux.buttons[index].redux);
+	            }));
 	        }
 	    };
 	};
@@ -1465,35 +1473,38 @@
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
-	var Component = exports.Component = function Component(redux, memoize) {
-	    var buttonCss = {
-	        display: 'block',
-	        marginTop: '3px'
-	    };
-	    var buttonsComponents = [0, 1, 2].map(function (index) {
-	        return (0, _index2.Component)('Button (' + index + ' sec)', buttonCss)(redux.buttons[index].redux);
-	    });
-	    var Button0 = memoize.structure.buttons[0].memoize(buttonsComponents[0]);
-	    var Button1 = memoize.structure.buttons[1].memoize(buttonsComponents[1]);
-	    var Button2 = memoize.structure.buttons[2].memoize(buttonsComponents[2]);
-	    var Textarea = memoize.structure.textarea.memoize(_index.Component);
-	    return memoize.memoize(function (_ref) {
-	        var textarea = _ref.textarea,
-	            buttons = _ref.buttons;
+	var Component = exports.Component = function Component(memoize, buttons) {
+	    return memoize({
+	        memoize: function memoize(_ref) {
+	            var structure = _ref.structure;
 	
-	        return React.createElement(
-	            'div',
-	            null,
-	            React.createElement(Textarea, textarea),
-	            React.createElement(
+	            var Textarea = structure.textarea;
+	            return React.createElement(
 	                'div',
 	                null,
-	                React.createElement(Button0, buttons[0]),
-	                React.createElement(Button1, buttons[1]),
-	                React.createElement(Button2, buttons[2])
-	            )
-	        );
-	    });
+	                React.createElement(Textarea, null),
+	                React.createElement(
+	                    'div',
+	                    null,
+	                    structure.buttons.map(function (Button, i) {
+	                        return React.createElement(Button, { key: i });
+	                    })
+	                )
+	            );
+	        },
+	        structure: {
+	            textarea: function textarea(_ref2) {
+	                var getState = _ref2.getState;
+	                return React.createElement(_index.Component, getState());
+	            },
+	            buttons: buttons.map(function (Button) {
+	                return function (_ref3) {
+	                    var getState = _ref3.getState;
+	                    return React.createElement(Button, getState());
+	                };
+	            })
+	        }
+	    }).memoize;
 	};
 	
 	exports.default = Component;
@@ -1580,7 +1591,6 @@
 	var Component = exports.Component = function Component(_ref) {
 	    var highlighted = _ref.highlighted,
 	        todos = _ref.todos;
-	
 	    return React.createElement("textarea", {
 	        rows: "25",
 	        cols: "30",
@@ -6289,26 +6299,21 @@
 	        var dispatch = _ref.dispatch;
 	        return function (_ref2) {
 	            var clicked = _ref2.clicked;
-	
-	            var componentProps = {
+	            return function (props) {
+	                return React.createElement(
+	                    'button',
+	                    props,
+	                    label
+	                );
+	            }(_extends({
 	                style: _extends({
 	                    color: 'blue',
 	                    fontWeight: 'bold',
 	                    backgroundColor: clicked ? '#808080' : '#C3C3C3'
 	                }, css)
-	            };
-	            if (clicked) {
-	                componentProps.disabled = 'disabled';
-	            } else {
-	                componentProps.onClick = function () {
+	            }, clicked ? { disabled: 'disabled' } : { onClick: function onClick() {
 	                    return dispatch({ type: 'CLICK' });
-	                };
-	            }
-	            return React.createElement(
-	                'button',
-	                componentProps,
-	                label
-	            );
+	                } }));
 	        };
 	    };
 	};
@@ -6544,6 +6549,8 @@
 		
 		var _Redux2 = _interopRequireDefault(_Redux);
 		
+		var _Memoize2 = _interopRequireDefault(_Memoize);
+		
 		var _Reducer = __webpack_require__(/*! ./Composite/Reducer */ 6);
 		
 		var _Reducer2 = _interopRequireDefault(_Reducer);
@@ -6564,19 +6571,17 @@
 		
 		var _Redux4 = _interopRequireDefault(_Redux3);
 		
-		var _Memoize2 = __webpack_require__(/*! ./Composite/Memoize */ 14);
+		var _Memoize3 = __webpack_require__(/*! ./Composite/Memoize */ 14);
 		
-		var _Memoize3 = _interopRequireDefault(_Memoize2);
-		
-		var _Memoize4 = _interopRequireDefault(_Memoize);
+		var _Memoize4 = _interopRequireDefault(_Memoize3);
 		
 		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 		
-		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux4.default, Memoize: _Memoize3.default };
+		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux4.default, Memoize: _Memoize4.default };
 		var Composite = exports.Composite = function Composite(parameters) {
 		  return new _Composite2.default(parameters);
 		};
-		exports.default = { Composite: Composite, Structure: _Structure2.default, Redux: _Redux2.default, Memoize: _Memoize4.default, Defaults: Defaults, Wrappers: _Composite.Wrappers };
+		exports.default = { Composite: Composite, Structure: _Structure2.default, Redux: _Redux2.default, Memoize: _Memoize2.default, Defaults: Defaults, Wrappers: _Composite.Wrappers };
 	
 	/***/ }),
 	/* 2 */
@@ -7683,43 +7688,75 @@
 	/*!************************!*\
 	  !*** ./src/Memoize.js ***!
 	  \************************/
-	/***/ (function(module, exports) {
+	/***/ (function(module, exports, __webpack_require__) {
 	
 		'use strict';
 		
 		Object.defineProperty(exports, "__esModule", {
 		    value: true
 		});
-		var memoizeToggle = function memoizeToggle(memoize) {
-		    var state = false;
-		    return memoize(function () {
-		        state = !state;
-		        return state;
-		    });
+		exports.Memoize = undefined;
+		
+		var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+		
+		var _walkComposite = __webpack_require__(/*! walk-composite */ 5);
+		
+		var useStructure = function useStructure(memoize) {
+		    return typeof memoize.memoize === 'function' && memoize.structure !== undefined;
 		};
 		
-		var Memoize = exports.Memoize = function Memoize() {
-		    for (var _len = arguments.length, memoizeChain = Array(_len), _key = 0; _key < _len; _key++) {
-		        memoizeChain[_key] = arguments[_key];
-		    }
+		var MemoizeWalk = function MemoizeWalk(originalMemoize) {
+		    var parameters = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+		    return (0, _walkComposite.Walk)(_extends({
+		        leafCondition: function leafCondition(memoize) {
+		            return typeof memoize.memoize === 'function' && (memoize.structure === undefined || memoize !== originalMemoize);
+		        },
+		        keysMethod: function keysMethod(memoize) {
+		            return _walkComposite.Defaults.KeysMethod(useStructure(memoize) ? memoize.structure : memoize);
+		        },
+		        mutationMethod: function mutationMethod(key) {
+		            return function (memoize, memoizeStructure, getState) {
+		                return [(useStructure(memoize) ? memoize.structure : memoize)[key], function (structure) {
+		                    return structure !== undefined && structure[key] !== undefined ? structure[key] : undefined;
+		                }(useStructure(memoize) ? memoizeStructure.structure : memoizeStructure), function () {
+		                    return getState()[key];
+		                }];
+		            };
+		        },
+		        walkMethod: function walkMethod(parameters) {
+		            return MemoizeWalk(originalMemoize, parameters);
+		        }
+		    }, parameters));
+		};
 		
-		    var memoizeToggleChain = memoizeChain.map(function (memoize) {
-		        return memoizeToggle(memoize);
-		    });
-		    return function (callback) {
-		        var state = undefined,
-		            result = undefined;
-		        return function () {
-		            var next = memoizeToggleChain.map(function (memoizeToggleItem) {
-		                return memoizeToggleItem() ? '1' : '0';
-		            }).join('');
-		            if (next !== state) {
-		                state = next;
-		                result = callback.apply(undefined, arguments);
-		            }
-		            return result;
+		var MemoizeByMemoize = function MemoizeByMemoize(memoize) {
+		    return function (getState) {
+		        return function (memoizationStructure) {
+		            var structure = MemoizeWalk(memoize)(function (memoize, structure, getState) {
+		                return structure === undefined ? undefined : function (memoized) {
+		                    return memoize.structure === undefined ? memoized : MemoizeByMemoize(memoize)(getState)(structure);
+		                }(memoize.memoize(function () {
+		                    return structure({
+		                        getState: getState,
+		                        structure: structure
+		                    });
+		                }));
+		            })(memoize, memoizationStructure, getState);
+		            return _extends({
+		                structure: structure
+		            }, function (memoizationStructure) {
+		                return typeof memoizationStructure === 'function' ? {
+		                    memoize: memoize.memoize(function () {
+		                        return memoizationStructure({ structure: structure, getState: getState });
+		                    })
+		                } : {};
+		            }(typeof memoizationStructure === 'function' ? memoizationStructure : memoizationStructure.memoize));
 		        };
 		    };
+		};
+		
+		var Memoize = exports.Memoize = function Memoize(composite, getState) {
+		    return MemoizeByMemoize(composite.memoize(getState))(getState);
 		};
 		
 		exports.default = Memoize;
