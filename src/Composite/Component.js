@@ -1,9 +1,20 @@
-import {Component as Textarea} from '../Textarea/index';
-import {Component as Button} from '../Button/index';
+import {Component as Textarea} from '../Textarea';
+import {Component as Button} from '../Button';
 import * as React from 'react';
 
-export const Component = (memoize, buttons) => {
-    return memoize({
+export const Component = ({dispatch, getState}) => {
+    const buttonCss = {
+        display: 'block',
+        marginTop: '3px'
+    };
+    const buttonsKeys = Object.keys(getState().buttons);
+    const buttons = buttonsKeys
+        .map(key => Button(`Button (${key} sec)`, buttonCss)({dispatch: action => dispatch({
+                type: 'COMPOSITE', composite: {
+                    buttons: buttonsKeys.map(buttonKey => buttonKey === key ? action : undefined)
+                }
+        })})).map(Button => ({getState}) => <Button {...getState()}/>)
+    return memoize => memoize({
         memoize: ({structure}) => {
             const Textarea = structure.textarea;
             return (<div>
@@ -15,9 +26,9 @@ export const Component = (memoize, buttons) => {
         },
         structure: {
             textarea: ({getState}) => <Textarea {...getState()}/>,
-            buttons: buttons.map(Button => ({getState}) => <Button {...getState()}/>)
+            buttons
         }
     }).memoize
-};
+}
 
 export default Component;

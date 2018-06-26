@@ -1,6 +1,6 @@
 import {Structure, Composite as ReduxComposite} from 'redux-composite';
-import {Reducer as TextareaReducer, Middleware as TextareaMiddleware} from '../Textarea/index';
-import {Reducer as ButtonReducer, Middleware as ButtonMiddleware} from '../Button/index';
+import {Reducer as TextareaReducer, Middleware as TextareaMiddleware} from '../Textarea';
+import {Reducer as ButtonReducer, Middleware as ButtonMiddleware} from '../Button';
 
 export const Composite = timeouts => {
     const textarea = ReduxComposite({
