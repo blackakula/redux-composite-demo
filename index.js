@@ -76,30 +76,66 @@
 	
 	var _Button = __webpack_require__(/*! ./Button */ 66);
 	
+	var _reduxComposite = __webpack_require__(/*! redux-composite */ 26);
+	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
-	var application = exports.application = function application() {
+	function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+	
+	var application = function application() {
 	    var buttons = function buttons(timeouts, css) {
 	        return timeouts.map(function (timeout) {
 	            return (0, _Button.Component)('Button (' + Math.round(timeout / 100) / 10 + ' sec)', css);
 	        });
 	    };
 	
-	    var timeouts = { textarea: 100, buttons: [0, 1120, 2000] };
-	    var composite = (0, _Composite.Composite)(timeouts);
+	    var timeouts = [{ textarea: 100, buttons: [0, 1120, 2000] }, { textarea: 100, buttons: [1703, 0] }];
+	    var composite = (0, _reduxComposite.Structure)(timeouts.map(function (compositeTimeouts) {
+	        return (0, _Composite.Composite)(compositeTimeouts);
+	    }));
 	    var composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || _redux.compose;
 	    var store = (0, _redux.createStore)(composite.reducer, composeEnhancers((0, _redux.applyMiddleware)(composite.middleware)));
 	
 	    // initialize composite with the created store
 	    composite.init(store);
-	    var unsubscribe = composite.subscribe((0, _Composite.Listeners)(store));
-	    var CompositeComponent = composite.memoize((0, _Composite.Component)(buttons(timeouts.buttons, {
-	        display: 'block',
-	        marginTop: '3px'
-	    }), {
-	        float: 'left',
-	        marginRight: '10px'
-	    })).memoize;
+	    var unsubscribe = Object.keys(timeouts).map(function (i) {
+	        return composite.subscribe(Object.keys(timeouts).map(function (key) {
+	            return key === i ? (0, _Composite.Listeners)(composite.store[i].store) : undefined;
+	        }));
+	    });
+	    var CompositeComponent = composite.memoize({
+	        memoize: function memoize(_ref) {
+	            var structure = _ref.structure,
+	                rest = _objectWithoutProperties(_ref, ['structure']);
+	
+	            return React.createElement(
+	                'div',
+	                null,
+	                structure.map(function (memoized, i) {
+	                    return function (Component) {
+	                        return React.createElement(Component, { key: i });
+	                    }(memoized.memoize);
+	                })
+	            );
+	        },
+	        structure: timeouts.map(function (compositeTimeouts) {
+	            return (0, _Composite.Component)(buttons(compositeTimeouts.buttons, {
+	                display: 'block',
+	                marginTop: '3px'
+	            }), {
+	                float: 'left',
+	                marginRight: '10px'
+	            });
+	        })
+	    }).memoize;
+	    // Additional behavior to stop after 3 "todos"
+	    composite.store[1].structure.textarea.subscribe(function (_ref2) {
+	        var getState = _ref2.getState;
+	
+	        if (getState().todos.length === 3) {
+	            unsubscribe[1]();
+	        }
+	    });
 	
 	    var compositeRender = function compositeRender() {
 	        return (0, _reactDom.render)(React.createElement(CompositeComponent, store.getState()), document.getElementById('root'));
@@ -109,6 +145,7 @@
 	    compositeRender();
 	};
 	
+	exports.application = application;
 	application();
 
 /***/ }),
