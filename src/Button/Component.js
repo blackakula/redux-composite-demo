@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-export const Component = (label = 'Button', css = {}) => ({dispatch}) => ({clicked}) => (
+export const Component = (label = 'Button', css = {}) => ({dispatch, getState}) => (clicked => (
     props => <button {...props}>{label}</button>
 )({
     style: {
@@ -10,6 +10,6 @@ export const Component = (label = 'Button', css = {}) => ({dispatch}) => ({click
         ...css
     },
     ...(clicked ? {disabled: 'disabled'} : {onClick: () => dispatch({type: 'CLICK'})})
-})
+}))(getState().clicked)
 
 export default Component;

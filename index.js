@@ -74,19 +74,32 @@
 	
 	var React = _interopRequireWildcard(_react);
 	
+	var _Button = __webpack_require__(/*! ./Button */ 66);
+	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
 	var application = exports.application = function application() {
-	    var timeouts = { textarea: 100, buttons: [0, 1000, 2000] };
+	    var buttons = function buttons(timeouts, css) {
+	        return timeouts.map(function (timeout) {
+	            return (0, _Button.Component)('Button (' + Math.round(timeout / 100) / 10 + ' sec)', css);
+	        });
+	    };
+	
+	    var timeouts = { textarea: 100, buttons: [0, 1120, 2000] };
 	    var composite = (0, _Composite.Composite)(timeouts);
 	    var composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || _redux.compose;
 	    var store = (0, _redux.createStore)(composite.reducer, composeEnhancers((0, _redux.applyMiddleware)(composite.middleware)));
 	
-	    var listeners = (0, _Composite.Listeners)(store);
-	
 	    // initialize composite with the created store
-	    var unsubscribe = composite.init(store).subscribe(listeners);
-	    var CompositeComponent = (0, _Composite.Component)(store)(composite.memoize);
+	    composite.init(store);
+	    var unsubscribe = composite.subscribe((0, _Composite.Listeners)(store));
+	    var CompositeComponent = composite.memoize((0, _Composite.Component)(buttons(timeouts.buttons, {
+	        display: 'block',
+	        marginTop: '3px'
+	    }), {
+	        float: 'left',
+	        marginRight: '10px'
+	    })).memoize;
 	
 	    var compositeRender = function compositeRender() {
 	        return (0, _reactDom.render)(React.createElement(CompositeComponent, store.getState()), document.getElementById('root'));
@@ -1599,9 +1612,17 @@
 		
 		var _Memoize2 = _interopRequireDefault(_Memoize);
 		
+		var _Redux3 = __webpack_require__(/*! ./Redux */ 15);
+		
+		var _Redux4 = _interopRequireDefault(_Redux3);
+		
+		var _Memoize3 = __webpack_require__(/*! ./Memoize */ 16);
+		
+		var _Memoize4 = _interopRequireDefault(_Memoize3);
+		
 		function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 		
-		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux2.default, Memoize: _Memoize2.default };
+		var Defaults = exports.Defaults = { Reducer: _Reducer2.default, Middleware: _Middleware2.default, Equality: _Equality2.default, Subscribe: _Subscribe2.default, Redux: _Redux2.default, Memoize: _Memoize2.default, Init: { Store: _Redux4.default, Memoize: _Memoize4.default } };
 		var Composite = exports.Composite = function Composite(parameters) {
 		  return new _Composite2.default(parameters);
 		};
@@ -1833,16 +1854,15 @@
 		
 		    this.init = function (reduxStore) {
 		        return function (composite) {
-		            composite.memoize = function (memoize) {
-		                return memoize(composite.memoize, reduxStore.getState);
-		            }(init !== undefined && typeof init.memoize === 'function' ? init.memoize : _Memoize4.default);
-		
 		            var _ref2 = function (store) {
 		                return store(composite)(reduxStore);
 		            }(init !== undefined && typeof init.store === 'function' ? init.store : _Redux4.default),
 		                store = _ref2.store,
 		                structure = _ref2.structure;
 		
+		            composite.memoize = function (memoize) {
+		                return memoize(composite.memoize, store);
+		            }(init !== undefined && typeof init.memoize === 'function' ? init.memoize : _Memoize4.default);
 		            delete composite.redux;
 		            composite.store = structure;
 		            composite.getState = store.getState;
@@ -2798,6 +2818,10 @@
 		
 		var _walkComposite = __webpack_require__(/*! walk-composite */ 5);
 		
+		var _ReduxAction = __webpack_require__(/*! ./Helper/ReduxAction */ 7);
+		
+		function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+		
 		var useStructure = function useStructure(memoize) {
 		    return typeof memoize.memoize === 'function' && memoize.structure !== undefined;
 		};
@@ -2812,13 +2836,21 @@
 		            return _walkComposite.Defaults.KeysMethod(useStructure(memoize) ? memoize.structure : memoize);
 		        },
 		        mutationMethod: function mutationMethod(key) {
-		            return function (memoize, memoizeStructure, getState) {
+		            return function (memoize, memoizeStructure, dispatch, getState, subscribe) {
 		                return [(useStructure(memoize) ? memoize.structure : memoize)[key], function (structure) {
 		                    return structure !== undefined && structure[key] !== undefined ? structure[key] : undefined;
-		                }(useStructure(memoize) ? memoizeStructure.structure : memoizeStructure), function () {
+		                }(useStructure(memoize) ? memoizeStructure.structure : memoizeStructure), (0, _ReduxAction.MutateMethod)(dispatch, key), function () {
 		                    return getState()[key];
+		                }, function (listeners) {
+		                    return subscribe(_defineProperty({}, key, listeners));
 		                }];
 		            };
+		        },
+		        reducerMethod: {
+		            add: _walkComposite.Defaults.ReducerMethod.add,
+		            init: function init(memoize) {
+		                return _walkComposite.Defaults.ReducerMethod.init(useStructure(memoize) ? memoize.structure : memoize);
+		            }
 		        },
 		        walkMethod: function walkMethod(parameters) {
 		            return MemoizeWalk(originalMemoize, parameters);
@@ -2827,24 +2859,30 @@
 		};
 		
 		var MemoizeByMemoize = function MemoizeByMemoize(memoize) {
-		    return function (getState) {
+		    return function (_ref) {
+		        var dispatch = _ref.dispatch,
+		            getState = _ref.getState,
+		            subscribe = _ref.subscribe;
+		
 		        return function (memoizationStructure) {
-		            var structure = MemoizeWalk(memoize)(function (memoize, structure, getState) {
+		            var structure = MemoizeWalk(memoize)(function (memoize, structure, dispatch, getState, subscribe) {
 		                return structure === undefined ? undefined : function (memoized) {
-		                    return memoize.structure === undefined ? memoized : MemoizeByMemoize(memoize)(getState)(structure);
+		                    return memoize.structure === undefined ? memoized : MemoizeByMemoize(memoize)({ dispatch: dispatch, getState: getState, subscribe: subscribe })(structure);
 		                }(memoize.memoize(function () {
 		                    return structure({
+		                        dispatch: dispatch,
 		                        getState: getState,
-		                        structure: structure
+		                        structure: structure,
+		                        subscribe: subscribe
 		                    });
 		                }));
-		            })(memoize, memoizationStructure, getState);
+		            })(memoize, memoizationStructure, dispatch, getState, subscribe);
 		            return _extends({
 		                structure: structure
 		            }, function (memoizationStructure) {
 		                return typeof memoizationStructure === 'function' ? {
 		                    memoize: memoize.memoize(function () {
-		                        return memoizationStructure({ structure: structure, getState: getState });
+		                        return memoizationStructure({ structure: structure, dispatch: dispatch, getState: getState, subscribe: subscribe });
 		                    })
 		                } : {};
 		            }(typeof memoizationStructure === 'function' ? memoizationStructure : memoizationStructure.memoize));
@@ -2852,8 +2890,8 @@
 		    };
 		};
 		
-		var Memoize = exports.Memoize = function Memoize(memoize, getState) {
-		    return MemoizeByMemoize(memoize(getState))(getState);
+		var Memoize = exports.Memoize = function Memoize(memoize, store) {
+		    return MemoizeByMemoize(memoize(store.getState))(store);
 		};
 		
 		exports.default = Memoize;
@@ -2942,15 +2980,18 @@
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
 	var Component = exports.Component = function Component(_ref) {
-	    var highlighted = _ref.highlighted,
-	        todos = _ref.todos;
-	    return React.createElement("textarea", {
-	        rows: "25",
-	        cols: "30",
-	        style: { backgroundColor: highlighted ? '#AFDFAF' : 'white' },
-	        readOnly: "true",
-	        value: todos.join("\r\n")
-	    });
+	    var getState = _ref.getState;
+	    return function (_ref2) {
+	        var highlighted = _ref2.highlighted,
+	            todos = _ref2.todos;
+	        return React.createElement("textarea", {
+	            rows: "25",
+	            cols: "30",
+	            style: { backgroundColor: highlighted ? '#AFDFAF' : 'white' },
+	            readOnly: "true",
+	            value: todos.join("\r\n")
+	        });
+	    }(getState());
 	};
 	
 	exports.default = Component;
@@ -7649,9 +7690,9 @@
 	    var label = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'Button';
 	    var css = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 	    return function (_ref) {
-	        var dispatch = _ref.dispatch;
-	        return function (_ref2) {
-	            var clicked = _ref2.clicked;
+	        var dispatch = _ref.dispatch,
+	            getState = _ref.getState;
+	        return function (clicked) {
 	            return function (props) {
 	                return React.createElement(
 	                    'button',
@@ -7667,7 +7708,7 @@
 	            }, clicked ? { disabled: 'disabled' } : { onClick: function onClick() {
 	                    return dispatch({ type: 'CLICK' });
 	                } }));
-	        };
+	        }(getState().clicked);
 	    };
 	};
 	
@@ -7790,66 +7831,36 @@
 	
 	var _Textarea = __webpack_require__(/*! ../Textarea */ 27);
 	
-	var _Button = __webpack_require__(/*! ../Button */ 66);
-	
 	var _react = __webpack_require__(/*! react */ 29);
 	
 	var React = _interopRequireWildcard(_react);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
-	var Component = exports.Component = function Component(_ref) {
-	    var _dispatch = _ref.dispatch,
-	        getState = _ref.getState;
+	var Component = exports.Component = function Component(buttons) {
+	    var css = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+	    return {
+	        memoize: function memoize(_ref) {
+	            var structure = _ref.structure;
 	
-	    var buttonCss = {
-	        display: 'block',
-	        marginTop: '3px'
-	    };
-	    var buttonsKeys = Object.keys(getState().buttons);
-	    var buttons = buttonsKeys.map(function (key) {
-	        return (0, _Button.Component)('Button (' + key + ' sec)', buttonCss)({ dispatch: function dispatch(action) {
-	                return _dispatch({
-	                    type: 'COMPOSITE', composite: {
-	                        buttons: buttonsKeys.map(function (buttonKey) {
-	                            return buttonKey === key ? action : undefined;
-	                        })
-	                    }
-	                });
-	            } });
-	    }).map(function (Button) {
-	        return function (_ref2) {
-	            var getState = _ref2.getState;
-	            return React.createElement(Button, getState());
-	        };
-	    });
-	    return function (memoize) {
-	        return memoize({
-	            memoize: function memoize(_ref3) {
-	                var structure = _ref3.structure;
-	
-	                var Textarea = structure.textarea;
-	                return React.createElement(
+	            var Textarea = structure.textarea;
+	            return React.createElement(
+	                'div',
+	                { style: css },
+	                React.createElement(Textarea, null),
+	                React.createElement(
 	                    'div',
 	                    null,
-	                    React.createElement(Textarea, null),
-	                    React.createElement(
-	                        'div',
-	                        null,
-	                        structure.buttons.map(function (Button, i) {
-	                            return React.createElement(Button, { key: i });
-	                        })
-	                    )
-	                );
-	            },
-	            structure: {
-	                textarea: function textarea(_ref4) {
-	                    var getState = _ref4.getState;
-	                    return React.createElement(_Textarea.Component, getState());
-	                },
-	                buttons: buttons
-	            }
-	        }).memoize;
+	                    structure.buttons.map(function (Button, i) {
+	                        return React.createElement(Button, { key: i });
+	                    })
+	                )
+	            );
+	        },
+	        structure: {
+	            textarea: _Textarea.Component,
+	            buttons: buttons
+	        }
 	    };
 	};
 	
