@@ -13,6 +13,7 @@ export const application = () => {
         {textarea: 100, buttons: [1703, 0]}
     ];
     let composite = Structure(timeouts.map(compositeTimeouts => Composite(compositeTimeouts)));
+    composite.prettify();
     const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
     let store = createStore(
         composite.reducer,
