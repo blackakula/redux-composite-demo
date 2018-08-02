@@ -13,17 +13,9 @@ export const application = () => {
         {textarea: 100, buttons: [1703, 0]}
     ];
     let composite = Structure(timeouts.map(compositeTimeouts => Composite(compositeTimeouts)));
-    composite.prettify();
     const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-    let store = createStore(
-        composite.reducer,
-        composeEnhancers(
-          applyMiddleware(composite.middleware)
-        )
-    );
+    let store = composite.createStore()(r => r, m => composeEnhancers(applyMiddleware(m)));
 
-    // initialize composite with the created store
-    composite.init(store)
     const unsubscribe = Object.keys(timeouts).map(i => composite.subscribe(Object.keys(timeouts).map(key => key === i ? Listeners(composite.store[i].store) : undefined)))
     const CompositeComponent = composite.memoize({
         memoize: ({structure, ...rest}) => <div>
