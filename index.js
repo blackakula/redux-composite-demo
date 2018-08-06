@@ -131,20 +131,43 @@
 	        })
 	    }).memoize;
 	    // Additional behavior to stop after 3 "todos"
-	    composite.store[1].structure.textarea.subscribe(function (_ref2) {
-	        var getState = _ref2.getState;
 	
-	        if (getState().todos.length === 3) {
-	            unsubscribe[1]();
+	    // Variant #1
+	    // composite.store[1].structure.textarea.subscribe(({getState}) => {
+	    //     if (getState().todos.length === 3) {
+	    //         unsubscribe[1]()
+	    //     }
+	    // })
+	
+	    // Variant #2
+	    composite.store[1].store.subscribe({
+	        textarea: function textarea(_ref2) {
+	            var getState = _ref2.getState;
+	
+	            if (getState().todos.length === 3) {
+	                unsubscribe[1]();
+	            }
 	        }
 	    });
 	
-	    var compositeRender = function compositeRender() {
-	        return (0, _reactDom.render)(React.createElement(CompositeComponent, store.getState()), document.getElementById('root'));
+	    // Variant #3
+	    // composite.subscribe([
+	    //     ,
+	    //     {
+	    //         textarea: ({getState}) => {
+	    //             if (getState().todos.length === 3) {
+	    //                 unsubscribe[1]()
+	    //             }
+	    //         }
+	    //     }
+	    // ])
+	    var compositeRender = function compositeRender(_ref3) {
+	        var getState = _ref3.getState;
+	        return (0, _reactDom.render)(React.createElement(CompositeComponent, getState()), document.getElementById('root'));
 	    };
 	
-	    store.subscribe(compositeRender);
-	    compositeRender();
+	    composite.subscribe(compositeRender);
+	    compositeRender({ getState: composite.getState });
 	};
 	
 	exports.application = application;
@@ -2753,6 +2776,11 @@
 		var Subscribe = function Subscribe(compositeStructure) {
 		    return function (dispatch, getState) {
 		        return function (listeners) {
+		            if (typeof listeners === 'function') {
+		                return function () {
+		                    return listeners({ dispatch: dispatch, getState: getState });
+		                };
+		            }
 		            var initSubscribe = (0, _InitWalk2.default)()(function (composite, dispatch, getState, listener) {
 		                return composite.subscribe(dispatch, getState)(listener);
 		            })(compositeStructure, dispatch, getState, listeners);

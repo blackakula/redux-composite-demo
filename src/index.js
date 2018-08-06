@@ -1,4 +1,4 @@
-import {createStore, applyMiddleware,compose} from 'redux';
+import {applyMiddleware,compose} from 'redux';
 import {Composite, Listeners, Component} from './Composite';
 import {render} from 'react-dom';
 import * as React from 'react';
@@ -30,19 +30,41 @@ export const application = () => {
         }))
     }).memoize;
     // Additional behavior to stop after 3 "todos"
-    composite.store[1].structure.textarea.subscribe(({getState}) => {
-        if (getState().todos.length === 3) {
-            unsubscribe[1]()
+
+    // Variant #1
+    // composite.store[1].structure.textarea.subscribe(({getState}) => {
+    //     if (getState().todos.length === 3) {
+    //         unsubscribe[1]()
+    //     }
+    // })
+
+    // Variant #2
+    composite.store[1].store.subscribe({
+        textarea: ({getState}) => {
+            if (getState().todos.length === 3) {
+                unsubscribe[1]()
+            }
         }
     })
 
-    const compositeRender = () => render(
-        <CompositeComponent {...store.getState()}/>,
+    // Variant #3
+    // composite.subscribe([
+    //     ,
+    //     {
+    //         textarea: ({getState}) => {
+    //             if (getState().todos.length === 3) {
+    //                 unsubscribe[1]()
+    //             }
+    //         }
+    //     }
+    // ])
+    const compositeRender = ({getState}) => render(
+        <CompositeComponent {...getState()}/>,
         document.getElementById('root')
     );
 
-    store.subscribe(compositeRender);
-    compositeRender();
+    composite.subscribe(compositeRender);
+    compositeRender({getState: composite.getState});
 };
 
 application();
