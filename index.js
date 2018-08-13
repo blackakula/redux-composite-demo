@@ -3129,8 +3129,6 @@
 		
 		var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 		
-		function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-		
 		function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
 		
 		var Expand = exports.Expand = function Expand(action) {
@@ -3185,7 +3183,13 @@
 		                    message: 'inconsistency in action paths: [] !== {}'
 		                };
 		            }
-		            composite = compositeChecked ? _extends({}, composite, result) : [].concat(_toConsumableArray(composite), _toConsumableArray(result));
+		            if (compositeChecked) {
+		                composite = _extends({}, composite, result);
+		            } else {
+		                result.map(function (value, i) {
+		                    return composite[i] = value;
+		                });
+		            }
 		        });
 		        return { type: 'COMPOSITE', composite: composite };
 		    } catch (e) {
